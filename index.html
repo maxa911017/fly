@@ -12,94 +12,100 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      background-color: #050505; /* 深邃的底色 */
-      overflow: hidden; /* 防止滾動 */
+      background-color: #050505;
+      overflow: hidden;
       font-family: "PingFang TC", "Helvetica Neue", sans-serif;
+      touch-action: none;
     }
 
-    /* =========================================
-       360度環景圖預留區塊
-       ========================================= */
     #panorama-bg {
       position: absolute;
       top: 0;
       left: 0;
-      width: 200%; /* 寬度加倍以利於水平捲動動畫 */
+      width: 200%;
       height: 100%;
-      /* ★ 替換為您的 360 度環景圖網址 ★ */
       background-image: url('back.jpg'); 
-      background-size: 50% 100%; /* 讓圖片能正確重複 */
+      background-size: 50% 100%;
       background-repeat: repeat-x;
       background-position: left center;
       z-index: 0;
-      opacity: 0.25; /* 預設昏暗，不搶奪主視覺 */
-      animation: pan360 90s linear infinite; /* 緩慢旋轉動畫 */
+      opacity: 0.25;
+      animation: pan360 90s linear infinite;
       transition: filter 3s ease-in-out, opacity 3s ease-in-out;
     }
 
-    /* 穿梭時的背景變化 (模糊 + 提亮) */
     .panorama-flying {
       filter: blur(8px) brightness(1.8);
       opacity: 0.5 !important;
     }
 
-    /* 模擬 360 度旋轉的動畫 */
     @keyframes pan360 {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
 
+    /* --- UI 淡入淡出與縮放變形 --- */
+    .fade-transition { transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .step-hidden { opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.95); }
+    .step-active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+    
+    .folding-out { opacity: 0; pointer-events: none; transform: translateY(50px) scale(0.5) rotateX(45deg); transition: all 1s ease-in; }
 
-    /* 紙飛機 3D 穿梭動畫 */
-    #airplane-container {
+    /* --- 紙飛機專區 --- */
+    #airplane-wrapper {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, 50%);
-      opacity: 0;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 50;
       pointer-events: none;
-      z-index: 40;
-      perspective: 1000px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 20vh;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .floating-plane {
+      animation: floatPlane 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(200,230,255,0.6));
+    }
+
+    @keyframes floatPlane {
+      0% { transform: translateY(0px) rotateZ(-2deg) rotateX(10deg); }
+      50% { transform: translateY(-15px) rotateZ(2deg) rotateX(5deg); }
+      100% { transform: translateY(0px) rotateZ(-2deg) rotateX(10deg); }
+    }
+
+    #throw-hint {
+      position: absolute;
+      bottom: 10vh;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      pointer-events: none;
+      animation: pulseHint 2s infinite;
+    }
+
+    @keyframes pulseHint {
+      0% { opacity: 0.3; transform: translateY(0); }
+      50% { opacity: 0.8; transform: translateY(-10px); }
+      100% { opacity: 0.3; transform: translateY(0); }
     }
 
     .fly-animation {
-      animation: flyIntoDepth 4s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+      animation: aerodynamicFly 4s cubic-bezier(0.3, 0.0, 0.2, 1) forwards;
     }
 
-    @keyframes flyIntoDepth {
-      0% {
-        transform: translate(-50%, 150px) scale(2) rotateX(-20deg);
-        opacity: 0;
-        filter: blur(2px);
-      }
-      10% {
-        transform: translate(-50%, 80px) scale(1.5) rotateX(-10deg);
-        opacity: 1;
-        filter: blur(0px);
-      }
-      100% {
-        transform: translate(-50%, -50px) scale(0) rotateX(10deg);
-        opacity: 0;
-        filter: blur(4px);
-      }
+    @keyframes aerodynamicFly {
+      0% { transform: translateY(0) scale(1.2) rotateX(10deg) rotateZ(0deg); opacity: 1; filter: blur(0px); }
+      15% { transform: translateY(-150px) translateX(-30px) scale(0.9) rotateX(30deg) rotateZ(-15deg); opacity: 1; filter: blur(0px); }
+      40% { transform: translateY(-300px) translateX(20px) scale(0.6) rotateX(10deg) rotateZ(10deg); filter: blur(1px); }
+      70% { transform: translateY(-450px) translateX(-10px) scale(0.3) rotateX(40deg) rotateZ(-5deg); opacity: 0.8; filter: blur(2px); }
+      100% { transform: translateY(-600px) translateX(0) scale(0) rotateX(10deg) rotateZ(0deg); opacity: 0; filter: blur(5px); }
     }
 
-    /* UI 淡入淡出控制 */
-    .fade-transition {
-      transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
-    }
-    .step-hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(20px);
-    }
-    .step-active {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    /* 中央微光 (結尾出現) */
+    /* 中央微光 */
     #center-light {
       position: absolute;
       top: 50%;
@@ -112,44 +118,30 @@
       z-index: 10;
       pointer-events: none;
     }
-    .light-active {
-      box-shadow: 0 0 300px 200px rgba(200, 230, 255, 0.45) !important;
-    }
+    .light-active { box-shadow: 0 0 350px 250px rgba(200, 230, 255, 0.5) !important; }
 
     /* 結尾白光 */
     #white-out {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background-color: #ffffff;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
+      z-index: 100; opacity: 0; pointer-events: none;
       transition: opacity 5s ease-in-out;
     }
-    .white-out-active {
-      opacity: 1 !important;
-    }
+    .white-out-active { opacity: 1 !important; }
   </style>
 </head>
 <body class="text-gray-200 selection:bg-red-900">
 
-  <!-- 背景：360度環景圖 (透過 CSS 進行無限水平捲動) -->
   <div id="panorama-bg"></div>
-
-  <!-- 前景：3D 粒子穿梭畫布 -->
   <canvas id="bgCanvas" class="absolute top-0 left-0 w-full h-full z-10 pointer-events-none"></canvas>
   <div id="center-light"></div>
-
-  <!-- 結尾白光遮罩 -->
   <div id="white-out"></div>
 
   <!-- UI 容器 -->
-  <div class="relative z-30 w-full h-full flex flex-col items-center justify-center px-6 max-w-md mx-auto">
+  <div class="relative z-30 w-full h-full flex flex-col items-center justify-center px-6 max-w-md mx-auto" id="ui-container">
     
-    <!-- 步驟 0: 引言沈浸 -->
+    <!-- 步驟 0 -->
     <div id="step-0" class="absolute w-full px-6 fade-transition step-active text-center tracking-[0.1em] sm:tracking-[0.2em] leading-loose">
       <p class="text-gray-400 text-xs sm:text-sm animate-pulse mb-8 whitespace-nowrap">走在冰冷的長廊，盡頭沒有光。</p>
       <p class="text-gray-300 text-xs sm:text-sm whitespace-nowrap">大人說，只要不出聲，惡魔飛機就找不到我們。</p>
@@ -159,7 +151,7 @@
       </button>
     </div>
 
-    <!-- 步驟 1: 互動表單 -->
+    <!-- 步驟 1 -->
     <div id="step-1" class="absolute w-full px-6 fade-transition step-hidden">
       <form id="message-form" class="flex flex-col space-y-8 w-full">
         <div class="text-center mb-4 space-y-2">
@@ -167,30 +159,32 @@
           <p class="text-xs sm:text-sm text-gray-400 tracking-widest whitespace-nowrap">你想對愛的人說什麼？</p>
         </div>
 
-        <div class="relative">
-          <!-- 移除 required 避免預覽環境報錯 -->
-          <textarea id="input-message" placeholder="寫下你的思念..." class="w-full bg-black/40 backdrop-blur-sm border border-gray-700 rounded-md pb-2 pt-4 px-4 text-gray-200 focus:outline-none focus:border-red-800 transition-colors resize-none h-32 placeholder:text-gray-600 tracking-wider text-sm leading-relaxed"></textarea>
+        <div class="relative group">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-gray-700 to-gray-800 rounded-md blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+          <textarea id="input-message" placeholder="寫下你的思念..." class="relative w-full bg-black/60 backdrop-blur-md border border-gray-600 rounded-md pb-2 pt-4 px-4 text-gray-200 focus:outline-none focus:border-gray-400 transition-colors resize-none h-32 placeholder:text-gray-600 tracking-wider text-sm leading-relaxed shadow-inner"></textarea>
         </div>
 
-        <div class="relative">
+        <div class="relative group">
           <p class="text-[10px] sm:text-xs text-gray-500 mb-2 tracking-wider drop-shadow-md whitespace-nowrap">這份信件，將於半年後寄出。</p>
-          <!-- 移除 required 避免預覽環境報錯 -->
-          <input id="input-email" type="email" placeholder="收件人 Email" class="w-full bg-black/40 backdrop-blur-sm border border-gray-700 rounded-md py-3 px-4 text-gray-200 focus:outline-none focus:border-red-800 transition-colors placeholder:text-gray-600 tracking-wider text-sm" />
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-gray-700 to-gray-800 rounded-md blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+          <input id="input-email" type="email" placeholder="收件人 Email" class="relative w-full bg-black/60 backdrop-blur-md border border-gray-600 rounded-md py-3 px-4 text-gray-200 focus:outline-none focus:border-gray-400 transition-colors placeholder:text-gray-600 tracking-wider text-sm shadow-inner" />
         </div>
 
-        <button id="btn-submit" type="button" class="w-full py-4 mt-8 border border-gray-500 bg-white/5 backdrop-blur-md text-gray-300 rounded-md hover:bg-white/10 hover:text-white transition-all duration-500 tracking-[0.15em] sm:tracking-[0.2em] text-xs sm:text-sm flex items-center justify-center space-x-2 whitespace-nowrap">
-          <span id="btn-text">摺成紙飛機並寄出</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        <button id="btn-submit" type="button" class="w-full py-4 mt-8 border border-gray-500 bg-white/10 backdrop-blur-md text-gray-200 rounded-md hover:bg-white/20 hover:text-white transition-all duration-500 tracking-[0.15em] sm:tracking-[0.2em] text-xs sm:text-sm flex items-center justify-center space-x-3 whitespace-nowrap shadow-lg">
+          <span id="btn-text">將信件摺疊起來</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M2 15h10"></path>
+            <path d="m9 18 3-3-3-3"></path>
           </svg>
         </button>
       </form>
     </div>
 
-    <!-- 步驟 3: 最終結尾 -->
+    <!-- 步驟 3 -->
     <div id="step-3" class="absolute w-full px-6 fade-transition step-hidden text-center tracking-[0.15em] sm:tracking-[0.2em] leading-loose drop-shadow-lg">
-      <p class="text-gray-100 mb-6 text-base sm:text-lg whitespace-nowrap">已為您折妥。</p>
+      <p class="text-gray-100 mb-6 text-base sm:text-lg whitespace-nowrap">信件已投向遠方。</p>
       <p class="text-gray-300 text-xs sm:text-sm whitespace-nowrap">那些轟炸與恐懼終將遠去。</p>
       <p class="text-gray-300 text-xs sm:text-sm whitespace-nowrap">半年後，</p>
       <p class="text-gray-100 text-xs sm:text-sm whitespace-nowrap">這份希望將會抵達。</p>
@@ -198,17 +192,18 @@
         <p class="text-[10px] sm:text-xs text-gray-400 tracking-widest animate-pulse whitespace-nowrap">挺過之後一切都會變好的。</p>
       </div>
     </div>
-
   </div>
 
-  <!-- 紙飛機 SVG 元素 -->
-  <div id="airplane-container">
-    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));">
-      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-    </svg>
+  <!-- 紙飛機等待投擲專區 -->
+  <div id="airplane-wrapper">
+    <div id="airplane" class="floating-plane">
+      <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </div>
+    <div id="throw-hint">▲ 向上滑動，將希望寄出 ▲</div>
   </div>
 
-  <!-- Firebase 模組引入與邏輯 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -227,36 +222,136 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'art2026-fringe';
     let currentUser = null;
 
-    // 匿名登入 (加入防呆，即使出錯也不影響後續動畫)
     const initAuth = async () => {
-      try {
-        await signInAnonymously(auth);
-      } catch (error) {
-        console.warn("Firebase 授權可能被瀏覽器或預覽環境阻擋，將啟用容錯模式:", error);
-      }
+      try { await signInAnonymously(auth); } catch (error) { console.warn("容錯模式:", error); }
     };
     initAuth();
+    onAuthStateChanged(auth, (user) => { currentUser = user; });
 
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-    });
+    // ==========================================
+    // 劇院級音效合成系統 (Web Audio API)
+    // ==========================================
+    let audioCtx;
+    let bgmGain;
 
-    // --- 3D 穿梭畫布特效 (Canvas Starfield/Tunnel) ---
+    // 1. 初始化音效引擎
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // 2. 播放防空洞低頻轟鳴 (持續播放)
+    function playBunkerDrone() {
+      const osc = audioCtx.createOscillator();
+      bgmGain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 55; // 極低的轟鳴頻率
+      
+      osc.connect(bgmGain);
+      bgmGain.connect(audioCtx.destination);
+      
+      // 緩慢淡入
+      bgmGain.gain.setValueAtTime(0, audioCtx.currentTime);
+      bgmGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 3);
+      osc.start();
+    }
+
+    // 3. 播放摺紙沙沙聲
+    function playFoldSound() {
+      const bufferSize = audioCtx.sampleRate * 0.15; // 0.15秒短促音
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1; // 白噪音
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 1500; // 過濾掉低音，聽起來像紙張
+      
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start();
+    }
+
+    // 4. 播放風切聲與穿梭音 (滑動投擲時)
+    function playWhooshSound() {
+      const bufferSize = audioCtx.sampleRate * 4; // 4秒長的風聲
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.Q.value = 0.8;
+      
+      // 頻率掃描：模擬物體快速飛過的督卜勒效應
+      filter.frequency.setValueAtTime(200, audioCtx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(1500, audioCtx.currentTime + 1);
+      filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 3.5);
+      
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 1);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 4);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start();
+    }
+
+    // 5. 播放希望和弦 (結尾時)
+    function playHopeChime() {
+      // 關閉低頻轟鳴
+      if(bgmGain) {
+        bgmGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
+      }
+
+      // C大調和弦 (C5, E5, G5)
+      const freqs = [523.25, 659.25, 783.99]; 
+      freqs.forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        // 階梯式發聲與綿長的殘響
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.5 + i * 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 6);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 6);
+      });
+    }
+
+
+    // --- 3D 粒子星空 ---
     const canvas = document.getElementById('bgCanvas');
     const ctx = canvas.getContext('2d');
     let width, height;
     let particles = [];
-    
-    // 強化：大幅增加粒子數量至 10000 (營造極致沈浸感，若手機運行卡頓可適度調降)
     const numParticles = 10000; 
-
-    // 物理與動畫變數
-    let baseSpeed = 1.0;   // 基礎前進速度
-    let currentSpeed = baseSpeed;
-    let targetSpeed = baseSpeed;
+    let baseSpeed = 1.0, currentSpeed = baseSpeed, targetSpeed = baseSpeed;
     let isFlying = false;  
 
     function resize() {
@@ -268,14 +363,10 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // 初始化 3D 粒子 (加深空間感)
     for (let i = 0; i < numParticles; i++) {
       particles.push({
-        x: (Math.random() - 0.5) * 4000, // 更廣的 X 軸
-        y: (Math.random() - 0.5) * 4000, // 更廣的 Y 軸
-        z: Math.random() * 3000,         // 更深的 Z 軸
-        size: Math.random() * 1.5 + 0.3, // 大小差異化
-        isEmber: Math.random() > 0.85    // 15% 呈紅色火星
+        x: (Math.random() - 0.5) * 4000, y: (Math.random() - 0.5) * 4000, z: Math.random() * 3000,
+        size: Math.random() * 1.5 + 0.3, isEmber: Math.random() > 0.85
       });
     }
 
@@ -286,58 +377,48 @@
       
       ctx.globalCompositeOperation = 'source-over';
       currentSpeed += (targetSpeed - currentSpeed) * 0.03;
-
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const fov = 400; // 視角深度
+      const centerX = width / 2, centerY = height / 2, fov = 400; 
 
       particles.forEach(p => {
         p.z -= currentSpeed;
-
         if (p.z <= 0) {
-          p.z = 3000;
-          p.x = (Math.random() - 0.5) * 4000;
-          p.y = (Math.random() - 0.5) * 4000;
+          p.z = 3000; p.x = (Math.random() - 0.5) * 4000; p.y = (Math.random() - 0.5) * 4000;
         }
-
         const scale = fov / p.z;
-        const screenX = centerX + p.x * scale;
-        const screenY = centerY + p.y * scale;
-
+        const screenX = centerX + p.x * scale, screenY = centerY + p.y * scale;
         const opacity = Math.min((3000 - p.z) / 1000, 1);
         const radius = Math.max(p.size * scale, 0.1);
 
         if (screenX > 0 && screenX < width && screenY > 0 && screenY < height) {
           ctx.beginPath();
           ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
-          
           if (isFlying) {
             ctx.fillStyle = `rgba(220, 240, 255, ${opacity * 0.9})`;
           } else {
-            ctx.fillStyle = p.isEmber 
-              ? `rgba(200, 50, 50, ${opacity * 0.9})` 
-              : `rgba(130, 130, 130, ${opacity * 0.5})`;
+            ctx.fillStyle = p.isEmber ? `rgba(200, 50, 50, ${opacity * 0.9})` : `rgba(130, 130, 130, ${opacity * 0.5})`;
           }
           ctx.fill();
         }
       });
-
       requestAnimationFrame(renderCanvas);
     }
     renderCanvas();
 
-    // --- UI 流程與互動邏輯 ---
+    // --- UI 流程控制 ---
     const step0 = document.getElementById('step-0');
     const step1 = document.getElementById('step-1');
     const step3 = document.getElementById('step-3');
     const btnEnter = document.getElementById('btn-enter');
     const inputMessage = document.getElementById('input-message');
     const inputEmail = document.getElementById('input-email');
-    const airplaneContainer = document.getElementById('airplane-container');
-    const centerLight = document.getElementById('center-light');
-    const panoramaBg = document.getElementById('panorama-bg');
     const btnSubmit = document.getElementById('btn-submit');
     const btnText = document.getElementById('btn-text');
+    
+    const airplaneWrapper = document.getElementById('airplane-wrapper');
+    const airplane = document.getElementById('airplane');
+    const throwHint = document.getElementById('throw-hint');
+    const centerLight = document.getElementById('center-light');
+    const panoramaBg = document.getElementById('panorama-bg');
     const whiteOut = document.getElementById('white-out');
 
     function switchStep(hideElem, showElem) {
@@ -349,73 +430,111 @@
       }, 1500); 
     }
 
-    btnEnter.addEventListener('click', () => {
-      switchStep(step0, step1);
+    // ★ 進入時觸發防空洞低頻音效
+    btnEnter.addEventListener('click', () => { 
+      initAudio();
+      playBunkerDrone(); 
+      switchStep(step0, step1); 
     });
 
-    // 改監聽按鈕點擊，取代 form submit (避免預覽環境的各種阻擋)
+    // ★ 點擊摺疊按鈕時觸發紙張沙沙聲音效
     btnSubmit.addEventListener('click', async () => {
       const msgVal = inputMessage.value.trim();
       const emailVal = inputEmail.value.trim();
-      const origText = "摺成紙飛機並寄出";
       
-      // 1. 自訂表單驗證 (如果沒填寫，按鈕會變成提示文字)
       if (!msgVal || !emailVal) {
+        const origText = "將信件摺疊起來";
         btnText.textContent = "請填寫思念與收件信箱";
         setTimeout(() => btnText.textContent = origText, 3000);
         return;
       }
 
-      btnSubmit.disabled = true;
-      btnText.textContent = "傳遞中...";
+      // 播放摺紙音效
+      playFoldSound();
 
-      // 2. 準備使用者 ID (如果登入失敗，就配發隨機訪客ID)
+      btnSubmit.disabled = true;
+      btnText.textContent = "摺疊中...";
+      
       const uid = currentUser ? currentUser.uid : "guest-" + Math.floor(Math.random() * 100000);
 
-      // 3. 嘗試寫入 Firebase (即使失敗也偷偷捕獲，不中斷體驗)
       try {
-        const messagesRef = collection(db, 'artifacts', appId, 'users', uid, 'future_messages');
+        const messagesRef = collection(db, 'fringe2026_messages');
         await addDoc(messagesRef, {
+          userId: uid,
           message: msgVal,
           email: emailVal,
           createdAt: serverTimestamp(),
           scheduledSendTime: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), 
-          status: 'pending'
+          status: 'pending' 
         });
-      } catch (error) {
-        console.warn("寫入資料庫失敗 (可能為預覽環境限制)，但繼續播放視覺動畫:", error);
-      }
+      } catch (error) { console.warn("寫入失敗:", error); }
 
-      // === 無論資料庫是否成功，都強制執行以下動畫體驗 ===
-
-      // 隱藏表單
       step1.classList.remove('step-active');
-      step1.classList.add('step-hidden');
+      step1.classList.add('folding-out');
 
-      // 動畫啟動 (紙飛機飛出 + 粒子加速)
-      airplaneContainer.classList.add('fly-animation');
-      isFlying = true;
-      targetSpeed = 50.0; // 極速前進
-      centerLight.classList.add('light-active'); 
-      panoramaBg.classList.add('panorama-flying'); // 360 環景圖光影變化
-
-      // 4秒後進入最終結尾
       setTimeout(() => {
-        targetSpeed = baseSpeed; // 恢復平靜速度
-        switchStep(step1, step3);
-
-        // 15秒後開始白光吞噬特效 (動畫時長 5 秒)
-        setTimeout(() => {
-          whiteOut.classList.add('white-out-active');
-        }, 15000);
-
-        // 結尾文字出現後，20 秒後自動跳回 index.html
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 20000);
-
-      }, 4000);
+        airplaneWrapper.style.opacity = '1';
+        airplaneWrapper.style.pointerEvents = 'auto'; 
+      }, 1000);
     });
+
+    let startY = 0, isDragging = false, hasThrown = false; 
+
+    const handleStart = (e) => {
+      if (hasThrown) return;
+      isDragging = true;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      airplane.style.transform = "scale(1.1)"; 
+    };
+
+    const handleMove = (e) => {
+      if (!isDragging || hasThrown) return;
+      const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+      if (startY - currentY > 50) {
+        isDragging = false;
+        hasThrown = true;
+        executeThrow();
+      }
+    };
+
+    const handleEnd = () => {
+      if (hasThrown) return;
+      isDragging = false;
+      airplane.style.transform = ""; 
+    };
+
+    airplaneWrapper.addEventListener('touchstart', handleStart);
+    airplaneWrapper.addEventListener('touchmove', handleMove);
+    airplaneWrapper.addEventListener('touchend', handleEnd);
+    airplaneWrapper.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+
+    // ★ 投擲時觸發風切聲，結尾觸發希望和弦
+    function executeThrow() {
+      playWhooshSound(); // 播放風切穿梭聲
+
+      throwHint.style.opacity = '0';
+      airplane.classList.remove('floating-plane');
+      airplaneWrapper.style.pointerEvents = 'none';
+
+      airplane.classList.add('fly-animation');
+      isFlying = true;
+      targetSpeed = 60.0; 
+      centerLight.classList.add('light-active'); 
+      panoramaBg.classList.add('panorama-flying'); 
+
+      setTimeout(() => {
+        targetSpeed = baseSpeed; 
+        step3.classList.remove('step-hidden'); 
+        step3.classList.add('step-active');
+        
+        playHopeChime(); // 播放希望和弦，同時淡出低頻轟鳴
+
+        setTimeout(() => { whiteOut.classList.add('white-out-active'); }, 15000);
+        setTimeout(() => { window.location.href = 'index.html'; }, 20000);
+      }, 4500); 
+    }
   </script>
 </body>
 </html>
